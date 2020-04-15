@@ -92,42 +92,27 @@ def get_sudo(name,size):
 
 size=900
 img = get_sudo('sudoku5.jpg',size)
-blur = cv2.medianBlur(img,3)
-factor = size//9
-x=0
-y=0
+thresh = cv2.adaptiveThreshold(img,255,cv2.ADAPTIVE_THRESH_MEAN_C,\
+                cv2.THRESH_BINARY_INV,39,10)
+kernel = np.ones((1,1),np.uint8)
+#thresh = cv2.morphologyEx(thresh,cv2.MORPH_OPEN,kernel)
+#thresh = cv2.dilate(thresh,kernel,iterations=3)
+kernel = np.ones((1,10),np.uint8)
+thresh = cv2.morphologyEx(thresh,cv2.MORPH_CLOSE,kernel)
+kernel = np.ones((10,1),np.uint8)
+thresh = cv2.morphologyEx(thresh,cv2.MORPH_CLOSE,kernel)
+
+#contours,heirarchy = cv2.findContours(thresh,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
+thresh = cv2.bitwise_not(thresh)
+contours,heirarchy = cv2.findContours(thresh,cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
 blank = np.zeros(img.shape,np.uint8)
-for i in range(9):
-    for j in range(9):
-        section = img[y:y+factor,x:x+factor]
-        sectionmain = img[y:y+factor,x:x+factor]
-        section = cv2.medianBlur(section,15)
-        kernel = np.ones((3,3),np.uint8)
-        section = cv2.erode(section,kernel,iterations=1)
-        section = cv2.adaptiveThreshold(section,255,cv2.ADAPTIVE_THRESH_MEAN_C,\
-                cv2.THRESH_BINARY_INV,59,10)
-        #section = cv2.dilate(section,kernel,iterations=2)
-        contours,heirarchy = cv2.findContours(section,cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
-        area = factor*factor
-        final=()
-        for contour in contours:
-            M = cv2.moments(contour)
-            if M["m00"]!=0:
-                cx = int(M["m10"] / M["m00"])
-                cy = int(M["m01"] / M["m00"]) 
-                (x1,y1,w,h) = cv2.boundingRect(contour)
-                print(w*h,"area",cx,cy)
-                if (cy>=factor/3 and cy<=2*factor/3) or (cx>=factor/3 and cx<=2*factor/3) :
-                    final = (x1,y1,w,h)
-        if final!=():
-            x1,y1,w,h = final
-            cv2.rectangle(sectionmain, (x1,y1), (x1+w,y1+h), (0,255,0), 2)
-        print()
-        cv2.imwrite("images/{}_{}.jpg".format(i,j),sectionmain)
-        blank[y:y+factor,x:x+factor]=section
-        x+=factor
-    x=0
-    y+=factor
+for cnt in contours:
+    epsilon = 0.04*cv2.arcLength(cnt,True)
+    approx = cv2.approxPolyDP(cnt,epsilon,True)
+    approx = cv2.convexHull(cnt)
+    area = cv2.contourArea(approx)
+    if area <= 9000:
+        blank = cv2.drawContours(blank,[approx],-1,(255,255,255),2)
 
 plt.subplot(121),plt.imshow(img,cmap='Greys_r')
 plt.subplot(122),plt.imshow(blank,cmap='Greys_r')
