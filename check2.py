@@ -1,93 +1,134 @@
 import cv2
+from imutils import contours
 import numpy as np
 from matplotlib import pyplot as plt
 
-img = cv2.imread('sudoku3.jpg',0)
-#img = cv2.medianBlur(img,5)
-img = cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
-grey = cv2.cvtColor(img,cv2.COLOR_RGB2GRAY)
-
-th2 = cv2.adaptiveThreshold(grey,255,cv2.ADAPTIVE_THRESH_MEAN_C,\
-            cv2.THRESH_BINARY_INV,39,10)
-
-
-contours,heirarchy = cv2.findContours(th2,cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
-maxarea = 0
-cnt = contours[0]
-for i in contours:
-    if cv2.contourArea(i)>maxarea:
-        cnt = i
-        maxarea = cv2.contourArea(i)
-#x,y,_ = img.shape
-#pts1 = np.float32([[0,0],[x,0],[0,y],[x,y]])
-#pts2 = np.float32(box)
-#M = cv2.getPerspectiveTransform(pts2,pts1)
-#dst = cv2.warpPerspective(img,M,(600,600))
-blank = np.zeros(img.shape,np.uint8)
-#blank2 = np.zeros(img.shape,np.uint8)
-image = cv2.drawContours(blank,[cnt],-1,(255,255,255),2)
-edges = cv2.Canny(image,40,150,apertureSize = 3)
-#minlinelen = 1000
-#maxlinegap = 10
-lines = cv2.HoughLines(edges,1,np.pi/180,100)
-#print(len(lines[0]),lines)
-print(len(lines))
-createhor = []
-createver = []
-created = []
-anglediff=10
-rhodiff=10
-flag=0
-count = 2
-
-for line in lines:
-    for (rho,theta) in line:
-        flag=0
-        for (rho1,theta1,_) in created:
-            if abs(rho-rho1)<rhodiff and abs(theta-theta1)<anglediff:
-                flag=1
+def get_sudo(name,size):
+    img = cv2.imread(name,0)
+    original = img.copy()
+    #img = cv2.medianBlur(img,5)
+    img = cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
+    greymain = cv2.cvtColor(img,cv2.COLOR_RGB2GRAY)
+    
+    th2 = cv2.adaptiveThreshold(greymain,255,cv2.ADAPTIVE_THRESH_MEAN_C,\
+                cv2.THRESH_BINARY_INV,39,10)
+    
+    
+    contours,heirarchy = cv2.findContours(th2,cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
+    maxarea = 0
+    cnt = contours[0]
+    for i in contours:
+        if cv2.contourArea(i)>maxarea:
+            cnt = i
+            maxarea = cv2.contourArea(i)
+    blank = np.zeros(img.shape,np.uint8)
+    image = cv2.drawContours(blank,[cnt],-1,(255,255,255),2)
+    edges = cv2.Canny(image,40,150,apertureSize = 3)
+    lines = cv2.HoughLines(edges,1,np.pi/180,100)
+    createhor = []
+    createver = []
+    created = []
+    anglediff=10
+    rhodiff=10
+    flag=0
+    count = 2
+    
+    for line in lines:
+        for (rho,theta) in line:
+            flag=0
+            for (rho1,theta1) in created:
+                if abs(rho-rho1)<rhodiff and abs(theta-theta1)<anglediff:
+                    flag=1
+                    
+            if flag==0:
+                a = np.cos(theta)
+                b = np.sin(theta)
+                x0 = a*rho
+                y0 = b*rho
+                x1 = int(x0 + 1000*(-b))
+                y1 = int(y0 + 1000*(a))
+                x2 = int(x0 - 1000*(-b))
+                y2 = int(y0 - 1000*(a))
+                d = np.linalg.norm(np.array((x1,y1,0))-np.array((x2,y2,0)))
+                cv2.line(img,(x1,y1),(x2,y2),(0,255,0),2)
+                m=abs(1/np.tan(theta))
+                print(m)
+                if m<1:
+                    createhor.append((rho,theta))
+                else:
+                    createver.append((rho,theta))
+                created.append((rho,theta))
                 
-        if flag==0:
-            a = np.cos(theta)
-            b = np.sin(theta)
-            x0 = a*rho
-            y0 = b*rho
-            x1 = int(x0 + 1000*(-b))
-            y1 = int(y0 + 1000*(a))
-            x2 = int(x0 - 1000*(-b))
-            y2 = int(y0 - 1000*(a))
-            d = np.linalg.norm(np.array((x1,y1,0))-np.array((x2,y2,0)))
-            cv2.line(img,(x1,y1),(x2,y2),(0,255,0),2)
-            created.append((rho,theta,abs(1/np.tan(theta))))
-            
-def last(n):
-    return n[-1]
-created = sorted(created,key= last)
-points = []
-createhor = created[0:2]
-createver = created[-2:]
-print(createhor)
-print(createver)
-for (rho,theta,_) in createhor:
-    for (rho1,theta1,_) in createver:
-        if (rho,theta)!=(rho1,theta1):
-            a=[[np.cos(theta),np.sin(theta)],[np.cos(theta1),np.sin(theta1)]]
-            b=[rho,rho1]
-            cor=np.linalg.solve(a,b)
-            if list(cor) not in points:
-                points.append(list(cor))
+    points=[]
+    for (rho,theta) in createhor:
+        for (rho1,theta1) in createver:
+            if (rho,theta)!=(rho1,theta1):
+                a=[[np.cos(theta),np.sin(theta)],[np.cos(theta1),np.sin(theta1)]]
+                b=[rho,rho1]
+                cor=np.linalg.solve(a,b)
+                if list(cor) not in points:
+                    points.append(list(cor))
+    
+                
+    points.sort()
+    print(points)
+    if (points[0][1]>points[1][1]):
+        points[0],points[1]=points[1],points[0]
+    if (points[-1][1]<points[-2][1]):
+        points[-1],points[-2]=points[-2],points[-1]
+    
+    points[1],points[2]=points[2],points[1]
+    for i in points:
+        images = cv2.circle(image,(int(i[0]),int(i[1])),4,(0,0,255),-1)
+    pts1 = np.float32(points)
+    pts2 = np.float32([[0,0],[size,0],[0,size],[size,size]])
+    print(pts1)
+    print(pts2)
+    M = cv2.getPerspectiveTransform(pts1,pts2)
+    
+    warped2 = cv2.warpPerspective(blank,M,(size,size))
+    img = cv2.warpPerspective(original,M,(size,size))
+    return img
 
-            
-print(len(points))
-for i in points:
-    images = cv2.circle(image,(int(i[0]),int(i[1])),4,(0,0,255),-1)
-pts1 = np.float32(points)
-pts2 = np.float32([[0,0],[300,0],[0,300],[300,300]])
-M = cv2.getPerspectiveTransform(pts1,pts2)
+size=900
+img = get_sudo('sudoku5.jpg',size)
+blur = cv2.medianBlur(img,3)
+factor = size//9
+x=0
+y=0
+blank = np.zeros(img.shape,np.uint8)
+for i in range(9):
+    for j in range(9):
+        section = img[y:y+factor,x:x+factor]
+        sectionmain = img[y:y+factor,x:x+factor]
+        section = cv2.medianBlur(section,15)
+        kernel = np.ones((3,3),np.uint8)
+        section = cv2.erode(section,kernel,iterations=1)
+        section = cv2.adaptiveThreshold(section,255,cv2.ADAPTIVE_THRESH_MEAN_C,\
+                cv2.THRESH_BINARY_INV,59,10)
+        #section = cv2.dilate(section,kernel,iterations=2)
+        contours,heirarchy = cv2.findContours(section,cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
+        area = factor*factor
+        final=()
+        for contour in contours:
+            M = cv2.moments(contour)
+            if M["m00"]!=0:
+                cx = int(M["m10"] / M["m00"])
+                cy = int(M["m01"] / M["m00"]) 
+                (x1,y1,w,h) = cv2.boundingRect(contour)
+                print(w*h,"area",cx,cy)
+                if (cy>=factor/3 and cy<=2*factor/3) or (cx>=factor/3 and cx<=2*factor/3) :
+                    final = (x1,y1,w,h)
+        if final!=():
+            x1,y1,w,h = final
+            cv2.rectangle(sectionmain, (x1,y1), (x1+w,y1+h), (0,255,0), 2)
+        print()
+        cv2.imwrite("images/{}_{}.jpg".format(i,j),sectionmain)
+        blank[y:y+factor,x:x+factor]=section
+        x+=factor
+    x=0
+    y+=factor
 
-dst = cv2.warpPerspective(img,M,(300,300))
-
-#plt.imshow(blank2)
-#image = cv2.Canny(img,100,200)
-plt.imshow(dst)
+plt.subplot(121),plt.imshow(img,cmap='Greys_r')
+plt.subplot(122),plt.imshow(blank,cmap='Greys_r')
 plt.show()
