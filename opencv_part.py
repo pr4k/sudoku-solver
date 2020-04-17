@@ -91,7 +91,7 @@ def get_sudo(name,size):
     return img
 
 size=900
-img = get_sudo('sudoku5.jpg',size)
+img = get_sudo('sudoku_images/sudoku5.jpg',size)
 thresh = cv2.adaptiveThreshold(img,255,cv2.ADAPTIVE_THRESH_MEAN_C,\
                 cv2.THRESH_BINARY_INV,39,10)
 thresh1 = thresh.copy()
