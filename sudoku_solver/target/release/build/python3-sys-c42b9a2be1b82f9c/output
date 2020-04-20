@@ -1,0 +1,9 @@
+cargo:rustc-link-lib=python3.8
+cargo:rustc-link-search=native=/usr/lib
+cargo:rustc-cfg=Py_3_4
+cargo:rustc-cfg=Py_3_5
+cargo:rustc-cfg=Py_3_6
+cargo:rustc-cfg=Py_3_7
+cargo:rustc-cfg=Py_3_8
+cargo:python_flags=
+cargo:python_interpreter=/home/pr4k/projects/ml/env/bin/python
