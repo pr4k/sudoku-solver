@@ -3,6 +3,7 @@ import random
 import numpy as np
 from matplotlib import pyplot as plt
 
+datadir = 'data/'
 def sp_noise(image,prob):
     '''
     Add salt and pepper noise to image
@@ -31,7 +32,7 @@ index = [0,0,0,0,0,0,0,0,0,0]
 for (_,puzzle) in enumerate(puzzles[1:]):
     ques,sol = puzzle
     for num in ques:
-        if index[int(num)]<15000:
+        if index[int(num)]<4000:
             index[int(num)]+=1
             blank = np.zeros((28,28),np.uint8)
             textX = 11 + (random.randint(-5,5)) 
@@ -40,11 +41,11 @@ for (_,puzzle) in enumerate(puzzles[1:]):
             if num!='0':
                 cv2.putText(blank,num,(textX,textY),font,0.5,(255,255,255),1)
                 blank = sp_noise(blank,0.01)
-                cv2.imwrite("{}/{}.jpg".format(int(num),index[int(num)]),blank)
+                cv2.imwrite("{}{}/{}.jpg".format(datadir,int(num),index[int(num)]),blank)
                 print("writing {}/{}.jpg".format(int(num),index[int(num)]))
             else:
                 blank = sp_noise(blank,0.001)
-                cv2.imwrite("0/{}.jpg".format(index[int(num)]),blank)
+                cv2.imwrite("{}0/{}.jpg".format(datadir,index[int(num)]),blank)
                 print("writing 0/{}.jpg".format(index[int(num)]))
         else:
             pass 

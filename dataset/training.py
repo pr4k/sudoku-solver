@@ -46,8 +46,10 @@ model = Sequential()
 # model.add(Activation("softmax"))
 
 model.add(Conv2D(64, kernel_size=3, activation='relu', input_shape=(28,28,1)))
+model.add(MaxPooling2D(pool_size=(2,2)))
 model.add(Conv2D(32, kernel_size=3, activation='relu'))
 model.add(Conv2D(16, kernel_size=3, activation='relu'))
+model.add(Dropout(0.25))
 model.add(Flatten())
 model.add(Dense(10, activation='softmax'))
 
@@ -58,7 +60,7 @@ model.compile(loss="sparse_categorical_crossentropy",
 
 # Training the model, with 40 iterations
 # validation_split corresponds to the percentage of images used for the validation phase compared to all the images
-history = model.fit(X, y, batch_size=32, epochs=40 ,validation_split = 0.1)
+history = model.fit(X, y, batch_size=64, epochs=80 ,validation_split = 0.2)
 
 # Saving the model
 model_json = model.to_json()

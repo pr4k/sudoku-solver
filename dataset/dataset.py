@@ -9,12 +9,12 @@ import pickle
 file_list = []
 class_list = []
 
-DATADIR = "data"
+DATADIR = "output"
 
 # All the categories you want your neural network to detect
 
-CATEGORIES = ["1", "2", "3", "4", "5",
-	      "6", "7", "8", "9", "0",
+CATEGORIES = ["0","1", "2", "3", "4", "5",
+	      "6", "7", "8", "9"
 	      ]
 # The size of the images that your neural network will use
 IMG_SIZE =28 

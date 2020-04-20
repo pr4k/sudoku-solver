@@ -2,6 +2,7 @@ import cv2
 from imutils import contours as cnt_sort
 import numpy as np
 from matplotlib import pyplot as plt
+from prediction import predict
 
 def get_sudo(name,size):
     img = cv2.imread(name,0)
@@ -96,8 +97,8 @@ thresh = cv2.adaptiveThreshold(img,255,cv2.ADAPTIVE_THRESH_MEAN_C,\
                 cv2.THRESH_BINARY_INV,39,10)
 thresh1 = thresh.copy()
 kernel = np.ones((1,1),np.uint8)
-#thresh = cv2.morphologyEx(thresh,cv2.MORPH_OPEN,kernel)
-#thresh = cv2.dilate(thresh,kernel,iterations=3)
+thresh = cv2.morphologyEx(thresh,cv2.MORPH_OPEN,kernel)
+thresh = cv2.dilate(thresh,kernel,iterations=3)
 kernel = np.ones((1,10),np.uint8)
 thresh = cv2.morphologyEx(thresh,cv2.MORPH_CLOSE,kernel)
 kernel = np.ones((10,1),np.uint8)
@@ -124,11 +125,6 @@ for c in sudoku_rows:
     blank_base = cv2.drawContours(blank_base,[c],-1,(255),-1)
     blank = cv2.bitwise_and(thresh1,blank,mask=blank)
 
-#print((sudoku_rows))
-#for (i,c) in enumerate(sudoku_rows,1):
-#    blnk = blank
-#    blnk = cv2.drawContours(blnk,[c],-1,(255,255,255),-1)
-#    cv2.imwrite("images/{}.jpg".format(i),blnk)
 kernel = np.ones((5,1),np.uint8)
 blank = cv2.erode(blank,kernel,iterations=1)
 kernel = np.ones((6,6),np.uint8)
@@ -140,12 +136,37 @@ blank = cv2.morphologyEx(blank,cv2.MORPH_CLOSE,kernel)
 kernel = np.ones((6,6),np.uint8)
 blank = cv2.dilate(blank,kernel,iterations=1)
 factor = blank.shape[0]//9
+sudoku = []
+for i in range(9):
+    for j in range(9):
+        part = blank[i*factor:(i+1)*factor, j*factor:(j+1)*factor ]
+        part = cv2.resize(part,(28,28))
+        cv2.imwrite("images/{}_{}.jpg".format(i,j),part)
+        num,_ = predict(part)
+        sudoku.append(num)
+sudoku_image = np.zeros(blank.shape,np.uint8)
+y=-1
+x=0
+print(len(sudoku))
+for num in sudoku:
+    if (x%9)==0:
+        x=0
+        y+=1
+    textX = int( factor*x+factor/2 )
+    textY = int( factor*y+factor/2 )
+    font = cv2.FONT_HERSHEY_SIMPLEX
+    if num!=0:
+        cv2.putText(sudoku_image,str(num),(textX,textY),font,1,(255,255,255),6)
+    x+=1
+
 for i in range(10):
     print(factor*i)
     cv2.line(blank,(0,factor*i),(blank.shape[1],factor*i),(255),2,2)
     cv2.line(blank,(factor*i,0),(factor*i,blank.shape[0]),(255),2,2)
+    cv2.line(sudoku_image,(0,factor*i),(blank.shape[1],factor*i),(255),2,2)
+    cv2.line(sudoku_image,(factor*i,0),(factor*i,blank.shape[0]),(255),2,2)
 
 
-plt.subplot(121),plt.imshow(img,cmap='Greys_r')
-plt.subplot(122),plt.imshow(blank,cmap='Greys_r')
+plt.subplot(121),plt.imshow(sudoku_image,cmap='Greys_r')
+plt.subplot(122),plt.imshow(thresh1,cmap='Greys_r')
 plt.show()
