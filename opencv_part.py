@@ -90,11 +90,9 @@ def get_sudo_grid(name,size):
     
     warped2 = cv2.warpPerspective(blank,M,(size,size))
     img = cv2.warpPerspective(original,M,(size,size))
-    return img
+    return img, original,pts1,pts2
 
 def get_sudoku(img ,size=900):
-    size=900
-    img = get_sudo_grid(img,size)
     thresh = cv2.adaptiveThreshold(img,255,cv2.ADAPTIVE_THRESH_MEAN_C,\
                     cv2.THRESH_BINARY_INV,39,10)
     thresh1 = thresh.copy()
@@ -138,39 +136,75 @@ def get_sudoku(img ,size=900):
     kernel = np.ones((6,6),np.uint8)
     blank = cv2.dilate(blank,kernel,iterations=1)
     factor = blank.shape[0]//9
-    sudoku = []
+    sudoku_unsolved = []
     for i in range(9):
         for j in range(9):
             part = blank[i*factor:(i+1)*factor, j*factor:(j+1)*factor ]
             part = cv2.resize(part,(28,28))
             cv2.imwrite("images/{}_{}.jpg".format(i,j),part)
             num,_ = predict(part)
-            sudoku.append(str(num))
+            sudoku_unsolved.append(str(num))
     sudoku_image = np.zeros(blank.shape,np.uint8)
-    y=-1
+#    y=-1
+#    x=0
+    sudoku_solved = sudoku_solver.solve("".join(sudoku_unsolved).replace("0","."))
+    print(len(sudoku_unsolved))
+#    for num in sudoku_solved:
+#        if (x%9)==0:
+#            x=0
+#            y+=1
+#        textX = int( factor*x+factor/2 )
+#        textY = int( factor*y+factor/2 )
+#        font = cv2.FONT_HERSHEY_SIMPLEX
+#        if num!='0':
+#            cv2.putText(sudoku_image,str(num),(textX,textY),font,1,(255,255,255),6)
+#        x+=1
+#    
+#    for i in range(10):
+#        print(factor*i)
+#        cv2.line(blank,(0,factor*i),(blank.shape[1],factor*i),(255),2,2)
+#        cv2.line(blank,(factor*i,0),(factor*i,blank.shape[0]),(255),2,2)
+#        cv2.line(sudoku_image,(0,factor*i),(blank.shape[1],factor*i),(255),2,2)
+#        cv2.line(sudoku_image,(factor*i,0),(factor*i,blank.shape[0]),(255),2,2)
+    
+    return sudoku_unsolved,sudoku_solved
+def create_sudoku_img(factor,sudoku_image,sudoku,sudoku_unsolved):
     x=0
-    solved = sudoku_solver.solve("".join(sudoku).replace("0","."))
-    for num in solved:
+    y=-1
+    for num in range(len(sudoku)):
         if (x%9)==0:
             x=0
             y+=1
         textX = int( factor*x+factor/2 )
         textY = int( factor*y+factor/2 )
         font = cv2.FONT_HERSHEY_SIMPLEX
-        if num!='0':
-            cv2.putText(sudoku_image,str(num),(textX,textY),font,1,(255,255,255),6)
+        if sudoku_unsolved[num] == '0':
+            cv2.putText(sudoku_image,sudoku[num],(textX,textY),font,1.5,(0,255,255),5)
         x+=1
     
-    for i in range(10):
-        print(factor*i)
-        cv2.line(blank,(0,factor*i),(blank.shape[1],factor*i),(255),2,2)
-        cv2.line(blank,(factor*i,0),(factor*i,blank.shape[0]),(255),2,2)
-        cv2.line(sudoku_image,(0,factor*i),(blank.shape[1],factor*i),(255),2,2)
-        cv2.line(sudoku_image,(factor*i,0),(factor*i,blank.shape[0]),(255),2,2)
+#    for i in range(10):
+#        print(factor*i)
+#        cv2.line(sudoku_image,(0,factor*i),(sudoku_image.shape[1],factor*i),(0),2,2)
+#        cv2.line(sudoku_image,(factor*i,0),(factor*i,sudoku_image.shape[0]),(0),2,2)
+    return sudoku_image
+if __name__ == "__main__":
+    img = 'sudoku_images/sudoku5.jpg'
+    size = 900
+    img,original,pts1,pts2 = get_sudo_grid(img,size)
+    sudoku_unsolved,sudoku_solved = get_sudoku(img)
+    sudoku_image = np.zeros(img.shape,np.uint8)
+    factor = img.shape[0]//9
+    img = cv2.cvtColor(img,cv2.COLOR_GRAY2RGB)
+    original = cv2.cvtColor(original,cv2.COLOR_GRAY2RGB)
+    blank = np.zeros(img.shape,np.uint8)
+    print(sudoku_solved,"yes")
+    sudoku_image = create_sudoku_img(factor,blank,sudoku_solved,sudoku_unsolved)
+    M = cv2.getPerspectiveTransform(pts2,pts1)
     
-    
-    plt.subplot(121),plt.imshow(sudoku_image,cmap='Greys_r')
-    plt.subplot(122),plt.imshow(thresh1,cmap='Greys_r')
+    img = cv2.warpPerspective(sudoku_image,M,(original.shape[1],original.shape[0]))
+    img = cv2.bitwise_not(img)
+    img = cv2.bitwise_and(img,original)
+    cv2.imwrite("check.jpg",sudoku_image)
+    plt.subplot(121), plt.imshow(img)
+    plt.subplot(122), plt.imshow(original)
     plt.show()
-img = 'sudoku_images/sudoku5.jpg'
-get_sudoku(img)
