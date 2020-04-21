@@ -24,18 +24,32 @@ change_perspective_to_original
 Input: pts2, pts1, sudoku_image, original
 output: Final_Image
 '''
+folder = 'output/'
 name = 'sudoku_images/sudoku5.jpg'
 img = cv2.imread(name,1)
 
 crp_img, orgnl, pts1, pts2 = get_sudo_grid(img,900)
 
+cv2.imwrite(folder + "crpzimg.jpg",crp_img)
+cv2.imwrite(folder + "orgnl.jpg",orgnl)
+print("Image is cropped")
+
 sd_img, unsolved_sd_lst = get_sudoku(crp_img, 900)
 
+cv2.imwrite(folder + "sd_img.jpg",sd_img)
+print("Numbers are extracted")
+
 solved_sd_lst, unsolved_sd_img = solve_sudoku(unsolved_sd_lst, sd_img.shape)
+cv2.imwrite(folder + "unsolved_sd_img.jpg",unsolved_sd_img)
+print("Unsolved Sudoku image ready")
 
 solved_sd_img = create_sudoku_img(crp_img, solved_sd_lst, unsolved_sd_lst, False)
+cv2.imwrite(folder + "solved_sd_img.jpg",solved_sd_img)
+print("Solved sudoku image ready")
 
 final = change_perspective_to_original(pts2, pts1, solved_sd_img, orgnl)
+cv2.imwrite(folder + "final.jpg",final)
+print("Perspective changed to original image")
 
 plt.imshow(final)
 plt.show()

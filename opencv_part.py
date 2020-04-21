@@ -55,7 +55,6 @@ def get_sudo_grid(name,size):
                 d = np.linalg.norm(np.array((x1,y1,0))-np.array((x2,y2,0)))
                 cv2.line(img,(x1,y1),(x2,y2),(0,255,0),2)
                 m=abs(1/np.tan(theta))
-                print(m)
                 if m<1:
                     createhor.append((rho,theta))
                 else:
@@ -74,7 +73,6 @@ def get_sudo_grid(name,size):
     
                 
     points.sort()
-    print(points)
     if (points[0][1]>points[1][1]):
         points[0],points[1]=points[1],points[0]
     if (points[-1][1]<points[-2][1]):
@@ -85,8 +83,6 @@ def get_sudo_grid(name,size):
         images = cv2.circle(image,(int(i[0]),int(i[1])),4,(0,0,255),-1)
     pts1 = np.float32(points)
     pts2 = np.float32([[0,0],[size,0],[0,size],[size,size]])
-    print(pts1)
-    print(pts2)
     M = cv2.getPerspectiveTransform(pts1,pts2)
     
     warped2 = cv2.warpPerspective(blank,M,(size,size))
@@ -182,10 +178,10 @@ def create_sudoku_img(sudoku_image,sudoku,sudoku_unsolved,with_lines = True):
             x=0
             y+=1
         textX = int( factor*x+factor/2 )
-        textY = int( factor*y+factor/2 )
+        textY = int( factor*y+factor/2 + factor//4)
         font = cv2.FONT_HERSHEY_SIMPLEX
         if sudoku_unsolved[num] == '0':
-            cv2.putText(sudoku_image,sudoku[num],(textX,textY),font,1.5,(0,255,255),5)
+            cv2.putText(sudoku_image,sudoku[num],(textX,textY),font,1.75,(0,255,255),4)
         x+=1
     if with_lines:
         for i in range(10):
