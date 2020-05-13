@@ -1,4 +1,4 @@
-# An Augmented Sudoku Solution Image Generator
+# An Augmented Sudoku Solution Generator
 ![python](https://img.shields.io/badge/Python-3.8-blue) 
 ![cargo](https://img.shields.io/badge/cargo-1.42.0-red)
 
@@ -40,6 +40,37 @@ After getting the digits recognized, we will be using our **Python library Writt
 Once we have the solution its time to **mask** it over our original image.
 
 <img src = "output/final.jpg" width = 400px style = "padding:20px;"></img>
+
+---
+
+## Usage
+
+`python3 main.py` 
+
+---
+
+## Features
+
+- Uses Rust module to **Solve** Sudoku hence *Super Fast*
+- Automatically Detects Sudoku Block
+
+---
+
+## To-DO
+
+- Detect Sudoku Block in live video stream and solve
+
+---
+
+## License
+
+[![License](https://img.shields.io/github/license/pr4k/sudoku-solver)](http://badges.mit-license.org)
+
+- **[MIT license](http://opensource.org/licenses/mit-license.php)**
+- Copyright 2020 © pr4k
+
+---
+
 
 
 
